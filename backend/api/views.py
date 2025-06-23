@@ -12,12 +12,6 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from io import BytesIO
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-import os
 
 from recipes.models import (
     Ingredient, Tag, Recipe, Favorite, ShoppingCart, Follow,

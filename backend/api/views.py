@@ -15,6 +15,9 @@ from rest_framework.viewsets import ModelViewSet
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from io import BytesIO
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os
 
 from recipes.models import (
     Ingredient, Tag, Recipe, Favorite, ShoppingCart, Follow,
@@ -317,15 +320,19 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(sum=Sum('amount'))
 
+        # Регистрация TTF-шрифта с поддержкой кириллицы
+        font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'DejaVuSans.ttf')
+        pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
+
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
         width, height = A4
 
         y = height - 50
-        p.setFont("Helvetica-Bold", 16)
+        p.setFont("DejaVuSans", 16)
         p.drawString(50, y, "Список покупок")
         y -= 30
-        p.setFont("Helvetica", 12)
+        p.setFont("DejaVuSans", 12)
 
         for ingredient in ingredients:
             line = (
@@ -337,7 +344,7 @@ class RecipeViewSet(ModelViewSet):
             if y < 50:
                 p.showPage()
                 y = height - 50
-                p.setFont("Helvetica", 12)
+                p.setFont("DejaVuSans", 12)
 
         p.save()
         buffer.seek(0)

@@ -4,19 +4,12 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 
-from .views import RecipeViewSet
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path(
         'redoc/',
         TemplateView.as_view(template_name='redoc.html'),
         name='redoc'
-    ),
-    path(
-        's/<str:short_link>/',
-        RecipeViewSet.as_view({'get': 'short_link_redirect'}),
-        name='short_link_redirect'
     ),
     path('api/', include('api.urls', namespace='api')),
 ]

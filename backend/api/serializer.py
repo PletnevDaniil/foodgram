@@ -5,9 +5,9 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from djoser.serializers import UserCreateSerializer
 from recipes.models import (
-       Tag, Ingredient, Recipe, IngredientInRecipe,
-       Follow, TagInRecipe, Favorite, ShoppingCart, User
-   )
+    Tag, Ingredient, Recipe, IngredientInRecipe,
+    Follow, TagInRecipe, Favorite, ShoppingCart, User
+)
 
 
 class Base64ImageField(serializers.ImageField):

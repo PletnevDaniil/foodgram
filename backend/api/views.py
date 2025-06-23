@@ -328,7 +328,10 @@ class RecipeViewSet(ModelViewSet):
         p.setFont("Helvetica", 12)
 
         for ingredient in ingredients:
-            line = f"{ingredient['ingredient__name']} - {ingredient['sum']} ({ingredient['ingredient__measurement_unit']})"
+            line = (
+                f"{ingredient['ingredient__name']} - {ingredient['sum']} "
+                f"({ingredient['ingredient__measurement_unit']})"
+            )
             p.drawString(50, y, line)
             y -= 20
             if y < 50:
@@ -339,5 +342,7 @@ class RecipeViewSet(ModelViewSet):
         p.save()
         buffer.seek(0)
         response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.pdf"'
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.pdf"'
+        )
         return response

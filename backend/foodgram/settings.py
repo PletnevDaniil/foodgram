@@ -146,3 +146,5 @@ DJOSER = {
 }
 
 CSV_FILES_DIR = os.path.join(BASE_DIR, 'data')
+
+DEFAULT_PAGE_SIZE = 6

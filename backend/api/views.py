@@ -12,6 +12,9 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from io import BytesIO
 
 from recipes.models import (
     Ingredient, Tag, Recipe, Favorite, ShoppingCart, Follow,
@@ -305,8 +308,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='download_shopping_cart',
     )
     def download_shopping_cart(self, request):
-        """Метод для загрузки ингредиентов и их количества
-         для выбранных рецептов"""
+        """Метод для загрузки ингредиентов и их количества в PDF"""
 
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_recipe__user=request.user
@@ -314,5 +316,28 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(sum=Sum('amount'))
-        shopping_list = self.ingredients_to_txt(ingredients)
-        return HttpResponse(shopping_list, content_type='text/plain')
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+
+        y = height - 50
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(50, y, "Список покупок")
+        y -= 30
+        p.setFont("Helvetica", 12)
+
+        for ingredient in ingredients:
+            line = f"{ingredient['ingredient__name']} - {ingredient['sum']} ({ingredient['ingredient__measurement_unit']})"
+            p.drawString(50, y, line)
+            y -= 20
+            if y < 50:
+                p.showPage()
+                y = height - 50
+                p.setFont("Helvetica", 12)
+
+        p.save()
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="shopping_list.pdf"'
+        return response

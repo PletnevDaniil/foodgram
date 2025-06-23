@@ -3,13 +3,14 @@ volumes:
   backend_static:
   frontend_static:
   media:
-  
+
 services:
   db:
     image: postgres:13.0-alpine
     volumes:
       - pg_data:/var/lib/postgresql/data
     env_file: .env
+
   backend:
     image: daniilpletnev/foodgram_backend:latest
     restart: always
@@ -19,14 +20,13 @@ services:
     volumes:
       - backend_static:/app/static/
       - media:/app/media/
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000"
 
   frontend:
     image: daniilpletnev/foodgram_frontend:latest
     volumes:
       - frontend_static:/frontend_static/
-    command: sh -c "cp -r /app/build/. /frontend_static/ && python manage.py collectstatic --noinput"
-    depends_on:
-      - backend
+    command: sh -c "cp -r /app/build/. /frontend_static/"
 
   gateway:
     image: daniilpletnev/foodgram_gateway:latest
@@ -34,10 +34,9 @@ services:
     ports:
       - 7000:80
     volumes:
-      - frontend_static:/frontend_static
-      - backend_static:/app/static 
-      - ./media:/app/media
-      - ../frontend/build:/usr/share/nginx/html/
+      - frontend_static:/usr/share/nginx/html/
+      - backend_static:/app/static
+      - media:/app/media/
       - ./docs/:/usr/share/nginx/html/api/docs/
     depends_on:
       - backend

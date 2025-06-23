@@ -7,7 +7,7 @@ from djoser.serializers import UserCreateSerializer
 
 from recipes.models import (
     Tag, Ingredient, Recipe, IngredientInRecipe,
-    TagInRecipe, Favorite, ShoppingCart, User
+    Follow, TagInRecipe, Favorite, ShoppingCart, User
 )
 
 
@@ -55,11 +55,9 @@ class UserSerializer(UserCreateSerializer):
     def get_is_subscribed(self, obj):
         """Проверяет, подписан ли текущий пользователь на автора."""
         request = self.context.get('request')
-        return (
-            request and request.user.is_authenticated and obj.following.filter(
-                user=request.user
-            ).exists()
-        )
+        if not request or not request.user.is_authenticated:
+            return False
+        return Follow.objects.filter(user=request.user, author=obj).exists()
 
     def get_avatar(self, obj):
         """Возвращает URL аватара или None, если аватар отсутствует."""

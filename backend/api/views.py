@@ -320,8 +320,11 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(sum=Sum('amount'))
 
-        # Регистрация TTF-шрифта с поддержкой кириллицы
-        font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'DejaVuSans.ttf')
+        font_path = os.path.join(
+            os.path.dirname(__file__),
+            'fonts',
+            'DejaVuSans.ttf'
+        )
         pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
 
         buffer = BytesIO()

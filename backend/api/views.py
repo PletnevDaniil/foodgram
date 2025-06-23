@@ -1,6 +1,6 @@
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import viewsets, status, response
@@ -263,33 +263,6 @@ class RecipeViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    @action(
-        detail=True,
-        methods=['GET'],
-        url_path='get-link'
-    )
-    def get_short_link(self, request: Request, pk: int):
-        recipe = get_object_or_404(Recipe, pk=pk)
-        scheme = request.scheme
-        host = request.get_host()
-
-        return Response(
-            {
-                'short-link': f'{scheme}://{host}/s/{recipe.short_link}'
-            },
-            status=status.HTTP_200_OK
-        )
-
-    @action(
-        detail=False,
-        methods=['GET'],
-        url_path='s/(?P<short_link>[^/.]+)',
-        url_name='short_link'
-    )
-    def short_link_redirect(self, request, short_link):
-        recipe = get_object_or_404(Recipe, short_link=short_link)
-        return redirect(f'/recipes/{recipe.id}/')
-
     @staticmethod
     def ingredients_to_txt(ingredients):
         """Метод для объединения ингредиентов в список для загрузки"""
@@ -311,7 +284,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='download_shopping_cart',
     )
     def download_shopping_cart(self, request):
-        """Метод для загрузки ингредиентов и их количества в PDF"""
+        """Метод для загрузки ингредиентов и их количества в txt"""
 
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_recipe__user=request.user
@@ -320,39 +293,14 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(sum=Sum('amount'))
 
-        font_path = os.path.join(
-            os.path.dirname(__file__),
-            'fonts',
-            'DejaVuSans.ttf'
-        )
-        pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
-
-        buffer = BytesIO()
-        p = canvas.Canvas(buffer, pagesize=A4)
-        width, height = A4
-
-        y = height - 50
-        p.setFont("DejaVuSans", 16)
-        p.drawString(50, y, "Список покупок")
-        y -= 30
-        p.setFont("DejaVuSans", 12)
-
+        shopping_list = ''
         for ingredient in ingredients:
-            line = (
+            shopping_list += (
                 f"{ingredient['ingredient__name']} - {ingredient['sum']} "
-                f"({ingredient['ingredient__measurement_unit']})"
+                f"({ingredient['ingredient__measurement_unit']})\n"
             )
-            p.drawString(50, y, line)
-            y -= 20
-            if y < 50:
-                p.showPage()
-                y = height - 50
-                p.setFont("DejaVuSans", 12)
-
-        p.save()
-        buffer.seek(0)
-        response = HttpResponse(buffer, content_type='application/pdf')
+        response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.pdf"'
+            'attachment; filename="shopping_list.txt"'
         )
         return response

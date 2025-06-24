@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import viewsets, status, response
@@ -15,22 +16,20 @@ from rest_framework.viewsets import ModelViewSet
 
 from recipes.models import (
     Ingredient, Tag, Recipe, Favorite, ShoppingCart, Follow,
-    IngredientInRecipe,
+    IngredientInRecipe, User
 )
-from recipes.models import User
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializer import (
     TagSerializer, UserAvatarSerializer,
-    IngredientSerializer,
-    RecipeSerializer, UserSerializer, CreateRecipeSerializer,
-    FollowSerializer, AddFavoritesSerializer,
+    IngredientSerializer, RecipeSerializer, UserSerializer,
+    CreateRecipeSerializer, FollowSerializer, AddFavoritesSerializer,
 )
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вьюсет работы с обьектами класса Tag."""
+    """Вьюсет для работы с тегами."""
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -39,7 +38,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вьюсет для работы с обьектами класса Ingredient."""
+    """Вьюсет для работы с ингредиентами."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -51,7 +50,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CustomUserViewSet(UserViewSet):
-    """Вьюсет для работы с обьектами класса User и подписки на авторов."""
+    """Вьюсет для работы с пользователями и подписками."""
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -166,7 +165,7 @@ class CustomUserViewSet(UserViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    """ViewSet для обработки запросов, связанных с рецептами."""
+    """Вьюсет для работы с рецептами."""
 
     queryset = Recipe.objects.all()
     pagination_class = CustomPagination
@@ -175,7 +174,7 @@ class RecipeViewSet(ModelViewSet):
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):
-        """Метод для вызова определенного сериализатора. """
+        """Выбор сериализатора в зависимости от действия."""
 
         if self.action in ('list', 'retrieve'):
             return RecipeSerializer
@@ -183,7 +182,7 @@ class RecipeViewSet(ModelViewSet):
             return CreateRecipeSerializer
 
     def get_serializer_context(self):
-        """Метод для передачи контекста. """
+        """Добавление request в контекст сериализатора."""
 
         context = super().get_serializer_context()
         context.update({'request': self.request})
@@ -197,7 +196,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='favorite',
     )
     def favorite(self, request, pk):
-        """Метод для управления избранными подписками """
+        """Добавление/удаление рецепта в избранное."""
 
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
@@ -230,7 +229,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='shopping_cart',
     )
     def shopping_cart(self, request, pk):
-        """Метод для управления списком покупок"""
+        """Добавление/удаление рецепта в список покупок."""
 
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
@@ -256,19 +255,6 @@ class RecipeViewSet(ModelViewSet):
                            f'которого нет в списке покупок '},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-    @staticmethod
-    def ingredients_to_txt(ingredients):
-        """Метод для объединения ингредиентов в список для загрузки"""
-
-        shopping_list = ''
-        for ingredient in ingredients:
-            shopping_list += (
-                f"{ingredient['ingredient__name']}  - "
-                f"{ingredient['sum']}"
-                f"({ingredient['ingredient__measurement_unit']})\n"
-            )
-        return shopping_list
 
     @action(
         detail=False,

@@ -48,7 +48,7 @@ class TagAdmin(ModelAdmin):
 
 
 @register(IngredientInRecipe)
-class IngredientInRecipe(ModelAdmin):
+class IngredientInRecipeAdmin(ModelAdmin):
     list_display = ('pk', 'recipe', 'ingredient', 'amount')
 
 
@@ -70,5 +70,5 @@ class FavoriteAdmin(ModelAdmin):
 
 
 @register(TagInRecipe)
-class TagAdmin(ModelAdmin):
+class TagInRecipeAdmin(ModelAdmin):
     list_display = ('pk', 'tag', 'recipe')

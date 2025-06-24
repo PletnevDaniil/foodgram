@@ -96,8 +96,7 @@ Foodgram — это удобный веб-сервис для публикаци
 7. Заполните базу тестовыми данными:
 
     ```bash
-    docker-compose exec backend python manage.py add_ingridients_from_data
-    docker-compose exec backend python manage.py add_tags_from_data    
+    docker-compose exec backend python manage.py import_data
     ```
 
 8. На сервере в редакторе nano откройте конфиг Nginx:

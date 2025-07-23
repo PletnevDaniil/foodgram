@@ -5,7 +5,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    SimpleDocTemplate, Paragraph,
+    Spacer, Table, TableStyle, Flowable
 )
 from io import BytesIO
 
@@ -17,6 +18,18 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         'DejaVuLGCSans',
         './api/fonts/DejaVuLGCSans.ttf'
     ))
+
+    class Background(Flowable):
+        def __init__(self, color):
+            Flowable.__init__(self)
+            self.color = color
+
+        def draw(self):
+            canvas = self.canvas
+            canvas.saveState()
+            canvas.setFillColor(self.color)
+            canvas.rect(0, 0, doc.width, doc.height, fill=1, stroke=0)
+            canvas.restoreState()
 
     doc = SimpleDocTemplate(
         buffer,
@@ -38,7 +51,7 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
     ))
 
     story = []
-
+    story.append(Background(colors.lightblue))
     story.append(Paragraph("Список покупок", styles['TitleStyle']))
     story.append(Spacer(1, 0.2 * inch))
 
@@ -58,7 +71,7 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 0), (-1, 0), 'DejaVuLGCSans'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),

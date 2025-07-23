@@ -1,3 +1,5 @@
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -10,6 +12,11 @@ from io import BytesIO
 
 def generate_shopping_list_pdf(recipes_in_shopping_list):
     buffer = BytesIO()
+
+    pdfmetrics.registerFont(TTFont(
+        'DejaVuLGCSans',
+        './api/fonts/DejaVuLGCSans.ttf'
+    ))
 
     doc = SimpleDocTemplate(
         buffer,
@@ -27,7 +34,7 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         leading=22,
         alignment=1,
         spaceAfter=20,
-        fontName='Helvetica-Bold'
+        fontName='DejaVuLGCSans'
     ))
 
     story = []

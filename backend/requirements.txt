@@ -15,3 +15,4 @@ drf-extra-fields==3.4.0
 django-cors-headers==3.13.0
 django-colorfield==0.7.2
 reportlab==3.6.12
+PyPDF2>=1.26.0

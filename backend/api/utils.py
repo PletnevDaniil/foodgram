@@ -1,7 +1,5 @@
-from PyPDF2 import PdfFileReader, PdfFileWriter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -14,23 +12,12 @@ from io import BytesIO
 
 
 def generate_shopping_list_pdf(recipes_in_shopping_list):
-    background_buffer = BytesIO()
+    buffer = BytesIO()
 
     pdfmetrics.registerFont(TTFont(
         'DejaVuLGCSans',
         './api/fonts/DejaVuLGCSans.ttf'
     ))
-
-    c = canvas.Canvas(background_buffer, pagesize=letter)
-    c.setFillColor(colors.lightblue)
-    c.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
-    c.setFillColor(colors.white, alpha=0.85)
-    c.rect(50, 50, letter[0] - 100, letter[1] - 100, fill=1, stroke=0)
-    c.showPage()
-    c.save()
-    background_buffer.seek(0)
-
-    buffer = BytesIO()
 
     doc = SimpleDocTemplate(
         buffer,
@@ -49,10 +36,11 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         alignment=1,
         spaceAfter=20,
         fontName='DejaVuLGCSans',
-        textColor=colors.darkblue
+        textColor=colors.darkgreen
     ))
 
     story = []
+
     story.append(Paragraph("Список покупок", styles['TitleStyle']))
     story.append(Spacer(1, 0.2 * inch))
 
@@ -66,7 +54,7 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
     table = Table(data, colWidths=[4 * inch, 2 * inch])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgreen),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, -1), 'DejaVuLGCSans'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
@@ -77,18 +65,20 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
 
     story.append(table)
 
-    doc.build(story)
+    def add_background(canvas, doc):
+        canvas.saveState()
+        canvas.setFillColor(colors.lightblue)
+        canvas.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
 
-    background = PdfFileReader(background_buffer)
-    content = PdfFileReader(buffer)
+        canvas.setFillColor(colors.white)
+        canvas.rect(
+            0.5 * inch, 0.5 * inch,
+            letter[0] - inch, letter[1] - inch,
+            fill=1, stroke=0
+        )
+        canvas.restoreState()
 
-    output = PdfFileWriter()
-    page = content.getPage(0)
-    page.mergePage(background.getPage(0))
-    output.addPage(page)
+    doc.build(story, onFirstPage=add_background, onLaterPages=add_background)
 
-    result_buffer = BytesIO()
-    output.write(result_buffer)
-    result_buffer.seek(0)
-
-    return result_buffer
+    buffer.seek(0)
+    return buffer

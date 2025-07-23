@@ -65,16 +65,13 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
 
     table = Table(data, colWidths=[4 * inch, 2 * inch])
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4CAF50')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgreen),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, -1), 'DejaVuLGCSans'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor(
-            '#FFFFFF',
-            alpha=0.7
-        )),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
     ]))
 

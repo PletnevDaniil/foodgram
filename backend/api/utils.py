@@ -39,8 +39,11 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
     data.append(["Ингредиент", "Количество"])
 
     for item in recipes_in_shopping_list:
-        name = item['ingredient_name']
-        amount = f"{item['total_amount']} {item['measurement_unit']}"
+        name = item['ingredient__name']
+        measurement_unit = item['ingredient__measurement_unit']
+        total_amount = item['sum']
+
+        amount = f"{total_amount} {measurement_unit}"
         data.append([name, amount])
 
     table = Table(data, colWidths=[4 * inch, 2 * inch])

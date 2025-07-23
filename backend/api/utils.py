@@ -1,4 +1,6 @@
 from PyPDF2 import PdfFileReader, PdfFileWriter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -13,6 +15,11 @@ from io import BytesIO
 
 def generate_shopping_list_pdf(recipes_in_shopping_list):
     background_buffer = BytesIO()
+
+    pdfmetrics.registerFont(TTFont(
+        'DejaVuLGCSans',
+        './api/fonts/DejaVuLGCSans.ttf'
+    ))
 
     c = canvas.Canvas(background_buffer, pagesize=letter)
     c.setFillColor(colors.lightblue)

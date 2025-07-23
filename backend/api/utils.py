@@ -1,12 +1,13 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph,
-    Spacer, Table, TableStyle, Flowable
+    Spacer, Table, TableStyle,
 )
 from io import BytesIO
 
@@ -19,17 +20,17 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         './api/fonts/DejaVuLGCSans.ttf'
     ))
 
-    class Background(Flowable):
-        def __init__(self, color):
-            Flowable.__init__(self)
-            self.color = color
+    c = canvas.Canvas(buffer, pagesize=letter)
+    c.setFillColor(colors.lightblue)
+    c.rect(0, 0, letter[0], letter[1], fill=1, stroke=0)
+    c.setFillColor(colors.white, alpha=0.85)
+    c.rect(50, 50, letter[0] - 100, letter[1] - 100, fill=1, stroke=0)
+    c.showPage()
+    c.save()
 
-        def draw(self):
-            canvas = self.canvas
-            canvas.saveState()
-            canvas.setFillColor(self.color)
-            canvas.rect(0, 0, doc.width, doc.height, fill=1, stroke=0)
-            canvas.restoreState()
+    buffer.seek(0)
+    background_buffer = buffer
+    buffer = BytesIO()
 
     doc = SimpleDocTemplate(
         buffer,
@@ -40,6 +41,8 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         bottomMargin=0.5 * inch
     )
 
+    story = []
+
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
         name='TitleStyle',
@@ -47,11 +50,10 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         leading=22,
         alignment=1,
         spaceAfter=20,
-        fontName='DejaVuLGCSans'
+        fontName='DejaVuLGCSans',
+        textColor=colors.darkblue
     ))
 
-    story = []
-    story.append(Background(colors.lightblue))
     story.append(Paragraph("Список покупок", styles['TitleStyle']))
     story.append(Spacer(1, 0.2 * inch))
 
@@ -62,7 +64,6 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         name = item['ingredient__name']
         measurement_unit = item['ingredient__measurement_unit']
         total_amount = item['sum']
-
         amount = f"{total_amount} {measurement_unit}"
         data.append([name, amount])
 
@@ -76,11 +77,17 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
     ]))
 
     story.append(table)
 
-    doc.build(story)
+    doc.build(
+        story,
+        canvasmaker=lambda *args,
+        **kw: canvas.Canvas(background_buffer, *args, **kw)
+    )
 
+    buffer = background_buffer
     buffer.seek(0)
     return buffer

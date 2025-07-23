@@ -1,5 +1,5 @@
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -26,6 +26,7 @@ from .serializer import (
     IngredientSerializer, RecipeSerializer, UserSerializer,
     CreateRecipeSerializer, FollowSerializer, AddFavoritesSerializer,
 )
+from .utils import generate_shopping_list_pdf
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -273,14 +274,12 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(sum=Sum('amount'))
 
-        shopping_list = ''
-        for ingredient in ingredients:
-            shopping_list += (
-                f"{ingredient['ingredient__name']} - {ingredient['sum']} "
-                f"({ingredient['ingredient__measurement_unit']})\n"
-            )
-        response = HttpResponse(shopping_list, content_type='text/plain')
+        pdf_shopping_list = generate_shopping_list_pdf(ingredients)
+        response = FileResponse(
+            pdf_shopping_list,
+            content_type='application/pdf'
+        )
         response['Content-Disposition'] = (
-            'attachment; filename="shopping_list.txt"'
+            'attachment; filename="shopping_list.pdf"'
         )
         return response

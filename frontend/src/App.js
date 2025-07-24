@@ -7,7 +7,7 @@ import api from "./api";
 import styles from "./styles.module.css";
 
 import {
-  // About,
+  About,
   Main,
   Cart,
   SignIn,
@@ -294,7 +294,7 @@ function App() {
             </Route>
 
             <Route exact path="/about">
-              <NotFound />
+              <About updateOrders={updateOrders} orders={orders} />
               {/* <About component={About} /> */}
             </Route>
 

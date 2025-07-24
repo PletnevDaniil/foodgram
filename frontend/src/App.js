@@ -293,9 +293,10 @@ function App() {
               />
             </Route>
 
-            <Route exact path="/about">
+            {/* <Route exact path="/about">
               <About component={About} />
-            </Route>
+            </Route> */}
+            <Route exact path="/about" component={About} />
 
             <Route exact path="/reset-password">
               <ResetPassword onPasswordReset={onPasswordReset} />

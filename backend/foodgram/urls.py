@@ -12,7 +12,7 @@ urlpatterns = [
         name='redoc'
     ),
     path('api/', include('api.urls', namespace='api')),
-    path('about/', TemplateView.as_view(template_name='about.html')),
+    path('', include('recipes.urls', namespace='recipes')),
 ]
 
 if settings.DEBUG:

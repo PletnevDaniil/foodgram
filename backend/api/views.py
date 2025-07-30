@@ -1,7 +1,7 @@
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import viewsets, status, response
@@ -191,6 +191,18 @@ class RecipeViewSet(ModelViewSet):
 
     @action(
         detail=True,
+        permission_classes=(AllowAny,),
+        url_path='get-link'
+    )
+    def get_link(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        return Response({'short-link': request.build_absolute_uri(reverse(
+            'recipes:shortlink', args=[recipe.pk]))}, status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=True,
         methods=('post', 'delete'),
         permission_classes=(IsAuthenticated,),
         url_path='favorite',
@@ -265,7 +277,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='download_shopping_cart',
     )
     def download_shopping_cart(self, request):
-        """Метод для загрузки ингредиентов и их количества в txt"""
+        """Метод для загрузки списка покупок в pdf формате"""
 
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_recipe__user=request.user

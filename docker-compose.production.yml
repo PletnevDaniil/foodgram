@@ -1,7 +1,7 @@
 volumes:
   pg_data:
   backend_static:
-  frontend_static:
+  frontend_build:
   media:
 
 services:
@@ -24,9 +24,11 @@ services:
 
   frontend:
     image: daniilpletnev/foodgram_frontend:latest
+    container_name: frontend
+    restart: always
     volumes:
-      - frontend_static:/frontend_static/
-    command: sh -c "cp -r /app/build/. /frontend_static/"
+      - frontend_build:/usr/share/nginx/html
+    command: ["nginx", "-g", "daemon off;"]
 
   gateway:
     image: daniilpletnev/foodgram_gateway:latest
@@ -34,7 +36,7 @@ services:
     ports:
       - 7000:80
     volumes:
-      - frontend_static:/usr/share/nginx/html/
+      - frontend_build:/usr/share/nginx/html
       - backend_static:/app/static
       - media:/app/media/
       - ./docs/:/usr/share/nginx/html/api/docs/

@@ -103,7 +103,6 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "docker-compose.production.yml,docs"
         target: "foodgram"
-        strip_components: 1
     - name: Deploy to server
       uses: appleboy/ssh-action@master
       with:

@@ -90,19 +90,20 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [build_backend, build_frontend, build_gateway]  # ← ждём все образы
+    needs: [build_backend, build_frontend, build_gateway]
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
-    - name: Copy docker-compose.yml via ssh
+    - name: Copy docker-compose.yml and docs to server
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docker-compose.production.yml"
+        source: "docker-compose.production.yml,docs"
         target: "foodgram"
+        strip_components: 1
     - name: Deploy to server
       uses: appleboy/ssh-action@master
       with:

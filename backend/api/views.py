@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, Prefetch
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -21,7 +21,7 @@ from recipes.models import (
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializer import (
+from .serializers import (
     TagSerializer, UserAvatarSerializer,
     IngredientSerializer, RecipeSerializer, UserSerializer,
     CreateRecipeSerializer, FollowSerializer, AddFavoritesSerializer,
@@ -75,16 +75,28 @@ class CustomUserViewSet(UserViewSet):
         url_name='subscriptions',
     )
     def subscriptions(self, request):
-        """Метод для создания страницы подписок"""
+        queryset = User.objects.filter(
+            follow__user=self.request.user
+        ).prefetch_related(
+            Prefetch(
+                'recipes',
+                queryset=Recipe.objects.only(
+                    'id', 'name', 'image', 'cooking_time'
+                )
+            )
+        ).only('email', 'id', 'username', 'first_name', 'last_name', 'avatar')
 
-        queryset = User.objects.filter(follow__user=self.request.user)
-        if queryset:
-            pages = self.paginate_queryset(queryset)
-            serializer = FollowSerializer(pages, many=True,
-                                          context={'request': request})
-            return self.get_paginated_response(serializer.data)
-        return Response('Вы ни на кого не подписаны.',
-                        status=status.HTTP_400_BAD_REQUEST)
+        if not queryset.exists():
+            return Response(
+                {'detail': 'Вы ни на кого не подписаны.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pages = self.paginate_queryset(queryset)
+        serializer = FollowSerializer(
+            pages, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
@@ -201,6 +213,33 @@ class RecipeViewSet(ModelViewSet):
             'recipes:shortlink', args=[recipe.pk]))}, status.HTTP_200_OK,
         )
 
+    def _toggle_relation(self, request, pk, model_class, related_name):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+
+        if request.method == 'POST':
+            obj, created = model_class.objects.get_or_create(
+                user=user, recipe=recipe
+            )
+            if not created:
+                return Response(
+                    {'errors': f'Рецепт "{recipe.name}"уже в {related_name}.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            serializer = AddFavoritesSerializer(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            deleted, _ = model_class.objects.filter(
+                user=user, recipe=recipe
+            ).delete()
+            if deleted:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'errors': f'Рецепт "{recipe.name}" не в {related_name}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     @action(
         detail=True,
         methods=('post', 'delete'),
@@ -209,30 +248,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='favorite',
     )
     def favorite(self, request, pk):
-        """Добавление/удаление рецепта в избранное."""
-
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        if request.method == 'POST':
-            if Favorite.objects.filter(user=user, recipe=recipe).exists():
-                return Response(
-                    {'errors': f'Повторно - \"{recipe.name}\" добавить нельзя,'
-                               f'он уже есть в избранном у пользователя'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            Favorite.objects.create(user=user, recipe=recipe)
-            serializer = AddFavoritesSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            obj = Favorite.objects.filter(user=user, recipe=recipe)
-            if obj.exists():
-                obj.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {'errors': f'В избранном нет рецепта \"{recipe.name}\"'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return self._toggle_relation(request, pk, Favorite, 'избранном')
 
     @action(
         detail=True,
@@ -242,32 +258,9 @@ class RecipeViewSet(ModelViewSet):
         url_name='shopping_cart',
     )
     def shopping_cart(self, request, pk):
-        """Добавление/удаление рецепта в список покупок."""
-
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-
-        if request.method == 'POST':
-            if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
-                return Response(
-                    {'errors': f'Повторно - \"{recipe.name}\" добавить нельзя,'
-                               f'он уже есть в списке покупок'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            ShoppingCart.objects.create(user=user, recipe=recipe)
-            serializer = AddFavoritesSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            obj = ShoppingCart.objects.filter(user=user, recipe__id=pk)
-            if obj.exists():
-                obj.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {'errors': f'Нельзя удалить рецепт - \"{recipe.name}\", '
-                           f'которого нет в списке покупок '},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return self._toggle_relation(
+            request, pk, ShoppingCart, 'списке покупок'
+        )
 
     @action(
         detail=False,

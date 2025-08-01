@@ -123,7 +123,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.CustomPagination',
     'PAGE_SIZE': 6,
 }
 
@@ -135,9 +135,9 @@ DJOSER = {
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': False,
     'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
     'SERIALIZERS': {
-        'user': 'api.serializer.UserSerializer',
-        'user_create': 'api.serializer.CreateUserSerializer',
-        'current_user': 'api.serializer.UserSerializer',
+        'user': 'api.serializers.UserSerializer',
+        'user_create': 'api.serializers.CreateUserSerializer',
+        'current_user': 'api.serializers.UserSerializer',
     },
     'PERMISSIONS': {
         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
@@ -146,5 +146,3 @@ DJOSER = {
 }
 
 CSV_FILES_DIR = os.path.join(BASE_DIR, 'data')
-
-DEFAULT_PAGE_SIZE = 6

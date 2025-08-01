@@ -7,10 +7,9 @@ from .constans import (
     EMAIL_LENGTH, FIRST_NAME_LENGTH, LAST_NAME_LENGTH,
     USERNAME_LENGTH, TAG_NAME_LENGTH, TAG_SLUG_LENGTH,
     INGREDIENT_NAME_LENGTH, INGREDIENT_MEASUREMENT_UNIT_LENGTH,
-    RECIPE_NAME_LENGTH, LENGTH_SHORT_LINK, MIN_COOKING_TIME_VALUE,
+    RECIPE_NAME_LENGTH, MIN_COOKING_TIME_VALUE,
     MIN_AMOUNT_INGREDIENT
 )
-from .utils import generate_short_link
 
 
 class User(AbstractUser):
@@ -176,11 +175,6 @@ class Recipe(models.Model):
         ],
         help_text='Время приготовления в минутах'
     )
-    short_link = models.CharField(
-        verbose_name='Короткая ссылка',
-        default=generate_short_link,
-        max_length=LENGTH_SHORT_LINK
-    )
     created = models.DateTimeField(
         auto_now_add=True,
         db_index=True,
@@ -230,35 +224,6 @@ class IngredientInRecipe(models.Model):
 
     def __str__(self):
         return f'{self.ingredient} в {self.recipe}'
-
-
-class TagInRecipe(models.Model):
-    """Создание модели тегов рецепта."""
-
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        verbose_name='Теги',
-        help_text='Выберите теги рецепта'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт',
-        help_text='Выберите рецепт')
-
-    class Meta:
-        verbose_name = 'Тег рецепта'
-        verbose_name_plural = 'Теги рецепта'
-        constraints = [
-            models.UniqueConstraint(
-                fields=('tag', 'recipe'),
-                name='unique_tagrecipe'
-            )
-        ]
-
-    def __str__(self):
-        return f'{self.tag} {self.recipe}'
 
 
 class ShoppingCart(models.Model):

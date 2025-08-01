@@ -1,9 +1,9 @@
-from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 
 
 class CustomPagination(PageNumberPagination):
-    """Кастомный пагинатор  с настройкой количества элементов на странице"""
+    """Пагинатор с поддержкой ?limit=N (макс. 100)"""
 
     page_size_query_param = 'limit'
-    page_size = getattr(settings, 'DEFAULT_PAGE_SIZE', 6)
+    max_page_size = 100
+    page_size = 6

@@ -1,17 +1,28 @@
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)  ![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)  ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)  ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)  ![Gunicorn](https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white)  ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)  ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)  ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
+![Gunicorn](https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
 
-# Социальная сеть для обмена рецептами!
+# 🍽️ Foodgram — Социальная сеть для обмена рецептами
 
-Foodgram — это удобный веб-сервис для публикации рецептов, создания списков покупок и подписки на любимых авторов.
+**Foodgram** — это веб-сервис, где пользователи могут публиковать рецепты, подписываться на любимых авторов, добавлять блюда в избранное и формировать список покупок.
 
-## Описание проекта
+## 🌟 Функционал
 
-- Публикация рецептов с фото, ингредиентами и пошаговым описанием
-- Фильтрация по тегам (завтрак, обед, ужин и др.)
-- Список покупок с автоматическим подсчетом ингредиентов
-- Избранное — сохраняйте понравившиеся рецепты
-- Подписки — следите за новыми рецептами авторов
-- Скачивание списка покупок в TXT формате
+- ✅ Публикация рецептов с фото, ингредиентами и описанием
+- ✅ Подписка на авторов
+- ✅ Добавление рецептов в избранное
+- ✅ Добавление рецептов в список покупок
+- ✅ Фильтрация рецептов по тегам: завтрак, обед, ужин
+- ✅ Автоматическое объединение ингредиентов в списке покупок
+- ✅ Скачивание списка покупок в PDF
+- ✅ Аутентификация через JWT-токены
+- ✅ Документация API (Redoc)
+- ✅ Автоматический деплой через GitHub Actions
 
 ## Установка 
 
@@ -23,7 +34,20 @@ Foodgram — это удобный веб-сервис для публикаци
     ```bash
     cd foodgram
     ```
-2. Создайте файл .env и заполните его своими данными. Пример заполненого фаила указан в корневой директории проекта в файле .env.example.
+2. Создайте файл .env в корне проекта. Пример:
+
+    ```
+    DB_NAME=foodgram # Имя базы данных
+    POSTGRES_DB=foodgram
+    POSTGRES_USER=foodgram_user # Логин подключения к базе данных
+    POSTGRES_PASSWORD=your_strong_password # пароль подключения к базе данных
+    DB_HOST=db # Название контейнера базы данных
+    DB_PORT=5432 # Порт подключения к базе данных
+
+    ALLOWED_HOST= 127.0.0.1, localhost
+    SECRET_KEY=your_django_secret_key
+    DEBUG=0
+    ```
 
 ### Создание Docker-образов
 
@@ -73,10 +97,11 @@ Foodgram — это удобный веб-сервис для публикаци
 
     ```bash
     scp -i path_to_SSH/SSH_name docker-compose.production.yml username@server_ip:/home/username/kittygram/docker-compose.production.yml
-    * ath_to_SSH — путь к файлу с SSH-ключом;
-    * SSH_name — имя файла с SSH-ключом (без расширения);
-    * username — ваше имя пользователя на сервере;
+    * ath_to_SSH — путь к файлу с SSH-ключом.
+    * SSH_name — имя файла с SSH-ключом.
+    * username — ваше имя пользователя на сервере.
     * server_ip — IP вашего сервера.
+    * Убедитесь, что .env на сервере содержит правильные SECRET_KEY, POSTGRES_PASSWORD.
     ```
 
 5. Запустите docker compose в режиме демона:
@@ -129,6 +154,25 @@ Foodgram — это удобный веб-сервис для публикаци
     ```bash
     sudo service nginx reload
     ```
+### Документация API
+
+Доступна по адресу:
+👉 https://your_domain/redoc/
+
+Содержит:
+
+- ✅ Описание всех эндпоинтов
+- ✅ Примеры запросов и ответов
+- ✅ Модели данных
+- ✅ Права доступа
+
+### Особенности реализации
+
+- ✅ Base64ImageField — из drf_extra_fields для загрузки изображений
+- ✅ Пагинация — кастомная с ?limit=
+- ✅ Фильтрация — по тегам, избранному, списку покупок
+- ✅ Оптимизация — prefetch_related, bulk_create, only()
+- ✅ PDF-генерация — списка покупок
 
 ### Автор
 [Плетнев Даниил Михайлович](https://github.com/PletnevDaniil)

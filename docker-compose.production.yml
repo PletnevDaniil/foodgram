@@ -28,7 +28,13 @@ services:
     restart: always
     volumes:
       - frontend_build:/usr/share/nginx/html
-    command: ["nginx", "-g", "daemon off;"]
+    command: >
+      sh -c "
+      rm -rf /usr/share/nginx/html && 
+      cp -r /app/build /usr/share/nginx/html &&
+      echo 'Статика фронтенда скопирована' &&
+      tail -f /dev/null
+      "
 
   gateway:
     image: daniilpletnev/foodgram_gateway:latest

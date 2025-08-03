@@ -22,30 +22,14 @@ services:
       - media:/app/media/
     command: sh -c "python manage.py collectstatic --noinput && gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000"
 
-  frontend:
-    image: daniilpletnev/foodgram_frontend:latest
-    container_name: frontend
-    restart: always
-    volumes:
-      - frontend_build:/usr/share/nginx/html
-    command: >
-      sh -c "
-      echo 'Копируем статику фронтенда в общий volume...' &&
-      cp -r /app/build/* /usr/share/nginx/html/ &&
-      echo 'Готово. Контейнер будет работать вечно...' &&
-      tail -f /dev/null
-      "
-
   gateway:
     image: daniilpletnev/foodgram_gateway:latest
     env_file: .env
     ports:
       - 7000:80
     volumes:
-      - frontend_build:/usr/share/nginx/html
       - backend_static:/app/static
       - media:/app/media/
       - ./docs/:/usr/share/nginx/html/api/docs/
     depends_on:
       - backend
-      - frontend

@@ -207,8 +207,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        absolute_url = request.build_absolute_uri(f'/api/recipes/{recipe.pk}/')
-        return Response({'link': absolute_url}, status=200)
+        front_url = f'https://foodgrampletnev.zapto.org//recipes/{recipe.pk}/'
+        return Response({'link': front_url}, status=200)
 
     def _toggle_relation(self, request, pk, model_class, related_name):
         user = request.user

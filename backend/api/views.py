@@ -1,7 +1,6 @@
 from django.db.models import Sum, Prefetch
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import viewsets, status, response
@@ -208,10 +207,8 @@ class RecipeViewSet(ModelViewSet):
     )
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-
-        return Response({'short-link': request.build_absolute_uri(reverse(
-            'recipes:shortlink', args=[recipe.pk]))}, status.HTTP_200_OK,
-        )
+        absolute_url = request.build_absolute_uri(f'/recipes/{recipe.pk}/')
+        return Response({'link': absolute_url}, status=200)
 
     def _toggle_relation(self, request, pk, model_class, related_name):
         user = request.user

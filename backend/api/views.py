@@ -207,7 +207,7 @@ class RecipeViewSet(ModelViewSet):
     )
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        absolute_url = request.build_absolute_uri(f'/recipes/{recipe.pk}/')
+        absolute_url = request.build_absolute_uri(f'/api/recipes/{recipe.pk}/')
         return Response({'link': absolute_url}, status=200)
 
     def _toggle_relation(self, request, pk, model_class, related_name):

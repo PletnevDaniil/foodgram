@@ -200,20 +200,6 @@ class RecipeViewSet(ModelViewSet):
         context.update({'request': self.request})
         return context
 
-    @action(
-        detail=True,
-        permission_classes=(AllowAny,),
-        url_path='get-link'
-    )
-    def get_link(self, request, pk=None):
-        recipe = get_object_or_404(Recipe, pk=pk)
-        host = request.META.get('HTTP_HOST', 'localhost')
-        scheme = 'https' if request.is_secure() else 'http'
-
-        link = f'{scheme}://{host}/recipes/{recipe.pk}/'
-
-        return Response({'link': link}, status=200)
-
     def _toggle_relation(self, request, pk, model_class, related_name):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)

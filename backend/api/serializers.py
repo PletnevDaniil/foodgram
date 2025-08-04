@@ -203,29 +203,24 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'image': ['Обязательное поле.']
             })
-
         if not ingredients:
             raise serializers.ValidationError(
                 {'ingredients': ['Обязательное поле.']}
             )
-
         ingredient_ids = [item['id'] for item in ingredients]
         if len(ingredient_ids) != len(set(ingredient_ids)):
             raise serializers.ValidationError(
                 {'ingredients': ['Ингредиенты не должны повторяться.']}
             )
-
         existing_ingredients = Ingredient.objects.filter(id__in=ingredient_ids)
         if existing_ingredients.count() != len(ingredient_ids):
             raise serializers.ValidationError(
                 {'ingredients': ['Указан несуществующий ингредиент.']}
             )
-
         if not tags:
             raise serializers.ValidationError(
                 {'tags': ['Обязательное поле.']}
             )
-
         if len(tags) != len(set(tags)):
             raise serializers.ValidationError(
                 {'tags': ['Теги не должны повторяться.']}
@@ -233,55 +228,46 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
         return data
 
-    def create_ingredients(self, ingredients, recipe):
-        ingredient_ids = [item['id'] for item in ingredients]
+    def _add_ingredients(self, ingredients_data, recipe):
+        """Добавляет ингредиенты через bulk_create."""
+        ingredient_ids = [item['id'] for item in ingredients_data]
         ingredients_map = {
             ing.id: ing for ing in Ingredient.objects.filter(
                 id__in=ingredient_ids
             )
         }
-
-        bulk_list = []
-        for item in ingredients:
-            ingredient = ingredients_map.get(item['id'])
-            if not ingredient:
-                raise serializers.ValidationError(
-                    {'ingredients': [
-                        f'Ингредиент с id={item["id"]} не существует.'
-                    ]}
-                )
-            bulk_list.append(
-                IngredientInRecipe(
-                    ingredient=ingredient,
-                    recipe=recipe,
-                    amount=item['amount']
-                )
+        bulk_list = [
+            IngredientInRecipe(
+                ingredient=ingredients_map[item['id']],
+                recipe=recipe,
+                amount=item['amount']
             )
+            for item in ingredients_data
+        ]
         IngredientInRecipe.objects.bulk_create(bulk_list)
 
-    def create_tags(self, tags, recipe):
-        """Метод добавления тега"""
-        recipe.tags.set(tags)
-
     def create(self, validated_data):
-        """Метод создания модели"""
+        """Создаёт рецепт с ингредиентами и тегами."""
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-
-        user = self.context.get('request').user
-        recipe = Recipe.objects.create(**validated_data, author=user)
-        self.create_ingredients(ingredients, recipe)
-        self.create_tags(tags, recipe)
+        user = self.context['request'].user
+        recipe = Recipe.objects.create(author=user, **validated_data)
+        self._add_ingredients(ingredients, recipe)
+        recipe.tags.set(tags)
         return recipe
 
     def update(self, instance, validated_data):
-        """Метод обновления модели"""
+        """Обновляет рецепт, пересоздавая связи."""
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
         IngredientInRecipe.objects.filter(recipe=instance).delete()
+        self._add_ingredients(ingredients, instance)
+        instance.tags.set(tags)
 
-        self.create_ingredients(validated_data.pop('ingredients'), instance)
-        self.create_tags(validated_data.pop('tags'), instance)
-
-        return super().update(instance, validated_data)
+        return instance
 
 
 class FollowSerializer(UserSerializer):

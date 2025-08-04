@@ -14,8 +14,8 @@ from rest_framework.request import Request
 from rest_framework.viewsets import ModelViewSet
 
 from recipes.models import (
-    Ingredient, Tag, Recipe, Favorite, ShoppingCart, Follow,
-    IngredientInRecipe, User
+    Ingredient, Tag, Recipe, Favorite,
+    ShoppingCart, Follow, IngredientInRecipe, User
 )
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
@@ -49,7 +49,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ('^name',)
 
 
-class CustomUserViewSet(UserViewSet):
+class UserViewSet(UserViewSet):
     """Вьюсет для работы с пользователями и подписками."""
 
     queryset = User.objects.all()

@@ -1,30 +1,26 @@
-from django.db.models import Sum, Prefetch
+from django.db.models import Prefetch, Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import viewsets, status, response
+from recipes.models import (Favorite, Follow, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Tag, User)
+from rest_framework import response, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (
-    AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
-)
-from rest_framework.response import Response
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from recipes.models import (
-    Ingredient, Tag, Recipe, Favorite,
-    ShoppingCart, Follow, IngredientInRecipe, User
-)
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (
-    TagSerializer, UserAvatarSerializer,
-    IngredientSerializer, RecipeSerializer, UserSerializer,
-    CreateRecipeSerializer, FollowSerializer, AddFavoritesSerializer,
-)
+from .serializers import (AddFavoritesSerializer, CreateRecipeSerializer,
+                          FollowSerializer, IngredientSerializer,
+                          RecipeSerializer, TagSerializer,
+                          UserAvatarSerializer, UserSerializer)
 from .utils import generate_shopping_list_pdf
 
 

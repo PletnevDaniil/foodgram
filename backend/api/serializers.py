@@ -1,13 +1,9 @@
+from djoser.serializers import UserCreateSerializer
+from drf_extra_fields.fields import Base64ImageField
+from recipes.models import (Favorite, Follow, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Tag, User)
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from djoser.serializers import UserCreateSerializer
-
-from drf_extra_fields.fields import Base64ImageField
-
-from recipes.models import (
-    Tag, Ingredient, Recipe, IngredientInRecipe,
-    Follow, Favorite, ShoppingCart, User
-)
 
 
 class TagSerializer(ModelSerializer):

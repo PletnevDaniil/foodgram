@@ -1,15 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (MinValueValidator, RegexValidator, )
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-from .constans import (
-    EMAIL_LENGTH, FIRST_NAME_LENGTH, LAST_NAME_LENGTH,
-    USERNAME_LENGTH, TAG_NAME_LENGTH, TAG_SLUG_LENGTH,
-    INGREDIENT_NAME_LENGTH, INGREDIENT_MEASUREMENT_UNIT_LENGTH,
-    RECIPE_NAME_LENGTH, MIN_COOKING_TIME_VALUE,
-    MIN_AMOUNT_INGREDIENT
-)
+from .constans import (EMAIL_LENGTH, FIRST_NAME_LENGTH,
+                       INGREDIENT_MEASUREMENT_UNIT_LENGTH,
+                       INGREDIENT_NAME_LENGTH, LAST_NAME_LENGTH,
+                       MIN_AMOUNT_INGREDIENT, MIN_COOKING_TIME_VALUE,
+                       RECIPE_NAME_LENGTH, TAG_NAME_LENGTH, TAG_SLUG_LENGTH,
+                       USERNAME_LENGTH)
 
 
 class User(AbstractUser):

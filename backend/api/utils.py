@@ -40,15 +40,15 @@ def generate_shopping_list_pdf(recipes_in_shopping_list):
 
     story = []
 
-    story.append(Paragraph("Список покупок", styles['TitleStyle']))
+    story.append(Paragraph('Список покупок', styles['TitleStyle']))
     story.append(Spacer(1, 0.2 * inch))
 
-    data = [["Ингредиент", "Количество"]]
+    data = [['Ингредиент', 'Количество']]
     for item in recipes_in_shopping_list:
         name = item['ingredient__name']
         unit = item['ingredient__measurement_unit']
         amount = item['sum']
-        data.append([name, f"{amount} {unit}"])
+        data.append([name, f'{amount} {unit}'])
 
     table = Table(data, colWidths=[4 * inch, 2 * inch])
     table.setStyle(TableStyle([

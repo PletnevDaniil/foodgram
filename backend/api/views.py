@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Sum
+from django.db.models import Prefetch, Sum, Count
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,7 +18,9 @@ from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (AddFavoritesSerializer, CreateRecipeSerializer,
-                          FollowSerializer, IngredientSerializer,
+                          FollowRepresentationSerializer,
+                          FollowCreateSerializer,
+                          IngredientSerializer,
                           RecipeSerializer, TagSerializer,
                           UserAvatarSerializer, UserSerializer)
 from .utils import generate_shopping_list_pdf
@@ -71,24 +73,17 @@ class UserViewSet(UserViewSet):
     )
     def subscriptions(self, request):
         queryset = User.objects.filter(
-            follow__user=self.request.user
+            follow__user=request.user
+        ).annotate(
+            recipes_count=Count('recipes')
         ).prefetch_related(
             Prefetch(
                 'recipes',
-                queryset=Recipe.objects.only(
-                    'id', 'name', 'image', 'cooking_time'
-                )
+                queryset=Recipe.objects.all()
             )
-        ).only('email', 'id', 'username', 'first_name', 'last_name', 'avatar')
-
-        if not queryset.exists():
-            return Response(
-                {'detail': 'Вы ни на кого не подписаны.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
+        ).distinct()
         pages = self.paginate_queryset(queryset)
-        serializer = FollowSerializer(
+        serializer = FollowRepresentationSerializer(
             pages, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
@@ -104,34 +99,38 @@ class UserViewSet(UserViewSet):
         user = request.user
         author = get_object_or_404(User, id=id)
 
+        serializer = FollowCreateSerializer(
+            instance=author,
+            data={},
+            context={'request': request}
+        )
+
         if request.method == 'POST':
-            if user == author:
-                return Response(
-                    {'errors': 'Нельзя подписаться на самого себя'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            if Follow.objects.filter(user=user, author=author).exists():
-                return Response(
-                    {'errors': 'Вы уже подписаны на этого пользователя'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            Follow.objects.create(user=user, author=author)
-            serializer = FollowSerializer(
+            serializer = FollowCreateSerializer(
+                data={},
+                context={'request': request, 'author': author}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            representation = FollowRepresentationSerializer(
                 author,
                 context={'request': request}
             )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(
+                representation.data,
+                status=status.HTTP_201_CREATED
+            )
 
         if request.method == 'DELETE':
-            follow = Follow.objects.filter(user=user, author=author)
-            if not follow.exists():
+            deleted_count, _ = Follow.objects.filter(
+                user=user,
+                author=author
+            ).delete()
+            if deleted_count == 0:
                 return Response(
                     {'errors': 'Вы не подписаны на этого пользователя'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            follow.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -166,9 +165,7 @@ class UserViewSet(UserViewSet):
     def delete_avatar(self, request: Request, *args, **kwargs):
         user = self.request.user
         if user.avatar:
-            user.avatar.delete(save=False)
-            user.avatar = None
-            user.save()
+            user.avatar.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -183,7 +180,6 @@ class RecipeViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия."""
-
         if self.action in ('list', 'retrieve'):
             return RecipeSerializer
         elif self.action in ('create', 'partial_update'):
@@ -191,7 +187,6 @@ class RecipeViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         """Добавление request в контекст сериализатора."""
-
         context = super().get_serializer_context()
         context.update({'request': self.request})
         return context
@@ -253,8 +248,7 @@ class RecipeViewSet(ModelViewSet):
         url_name='download_shopping_cart',
     )
     def download_shopping_cart(self, request):
-        """Метод для загрузки списка покупок в pdf формате"""
-
+        """Метод для загрузки списка покупок в pdf формате."""
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_recipe__user=request.user
         ).values(

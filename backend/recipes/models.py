@@ -1,32 +1,32 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import (MaxValueValidator,
+                                    MinValueValidator,
+                                    RegexValidator,)
 from django.db import models
 
-from .constans import (EMAIL_LENGTH, FIRST_NAME_LENGTH,
-                       INGREDIENT_MEASUREMENT_UNIT_LENGTH,
-                       INGREDIENT_NAME_LENGTH, LAST_NAME_LENGTH,
-                       MIN_AMOUNT_INGREDIENT, MIN_COOKING_TIME_VALUE,
-                       RECIPE_NAME_LENGTH, TAG_NAME_LENGTH, TAG_SLUG_LENGTH,
-                       USERNAME_LENGTH)
+from .constants import (EMAIL_LENGTH, FIRST_NAME_LENGTH,
+                        INGREDIENT_MEASUREMENT_UNIT_LENGTH,
+                        INGREDIENT_NAME_LENGTH, LAST_NAME_LENGTH,
+                        MIN_AMOUNT_INGREDIENT, MIN_COOKING_TIME_VALUE,
+                        RECIPE_NAME_LENGTH, TAG_NAME_LENGTH, TAG_SLUG_LENGTH,
+                        MAX_COOKING_TIME_VALUE,
+                        USERNAME_LENGTH)
 
 
 class User(AbstractUser):
-    """Кастомная модель пользователя для приложения foodgram"""
+    """Кастомная модель пользователя для приложения foodgram."""
 
     email = models.EmailField(
         max_length=EMAIL_LENGTH,
         unique=True,
-        verbose_name='Электронная почта',
-        help_text='Введите свой электронный адрес'
+        verbose_name='Электронная почта'
     )
 
     username = models.CharField(
         max_length=USERNAME_LENGTH,
         unique=True,
-        db_index=True,
         verbose_name='логин',
-        help_text='Введите username пользователя',
         validators=[
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
@@ -40,21 +40,19 @@ class User(AbstractUser):
 
     first_name = models.CharField(
         max_length=FIRST_NAME_LENGTH,
-        verbose_name='Имя',
-        help_text='Введите имя пользователя'
+        verbose_name='Имя'
     )
 
     last_name = models.CharField(
         max_length=LAST_NAME_LENGTH,
-        verbose_name='Фамилия',
-        help_text='Введите фамилию пользователя'
+        verbose_name='Фамилия'
     )
 
     avatar = models.ImageField(
         upload_to='avatars/',
         blank=True,
-        null=True,
-        verbose_name='Аватар'
+        verbose_name='Аватар',
+        help_text='Рекомендуемый размер: 200x200 пикселей, формат— JPG или PNG'
     )
 
     USERNAME_FIELD = 'email'
@@ -71,7 +69,7 @@ class User(AbstractUser):
 
 
 class Tag(models.Model):
-    """Модель для описания тега"""
+    """Модель для описания тега."""
 
     name = models.CharField(
         max_length=TAG_NAME_LENGTH,
@@ -107,24 +105,20 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Модель для описания ингредиента"""
+    """Модель для описания ингредиента."""
 
     name = models.CharField(
         max_length=INGREDIENT_NAME_LENGTH,
         db_index=True,
-        verbose_name='Название ингредиента',
-        help_text='Укажите ингридиент'
+        verbose_name='Название ингредиента'
     )
 
     measurement_unit = models.CharField(
         max_length=INGREDIENT_MEASUREMENT_UNIT_LENGTH,
-        verbose_name='Единицы измерения',
-        help_text='Укажите еденицу измерения'
+        verbose_name='Единицы измерения'
     )
 
     class Meta:
-        """Мета-параметры модели"""
-
         ordering = ('name',)
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
@@ -134,7 +128,7 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    """Модель для описания рецепта"""
+    """Модель для описания рецепта."""
 
     author = models.ForeignKey(
         User,
@@ -144,17 +138,16 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         max_length=RECIPE_NAME_LENGTH,
-        verbose_name='Название',
-        help_text='Название блюда'
+        verbose_name='Название'
     )
     image = models.ImageField(
         verbose_name='Изображение',
         upload_to='recipes/',
-        blank=True
+        blank=True,
+        help_text='Максимальный размер — 5 МБ, формат — JPG, PNG'
     )
     text = models.TextField(
-        verbose_name='Описание',
-        help_text='Опишите процесс приготовления'
+        verbose_name='Описание'
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -171,6 +164,7 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=[
             MinValueValidator(MIN_COOKING_TIME_VALUE),
+            MaxValueValidator(MAX_COOKING_TIME_VALUE),
         ],
         help_text='Время приготовления в минутах'
     )
@@ -190,7 +184,7 @@ class Recipe(models.Model):
 
 
 class IngredientInRecipe(models.Model):
-    """Промежуточная модель для ингредиентов в рецепте"""
+    """Промежуточная модель для ингредиентов в рецепте."""
 
     recipe = models.ForeignKey(
         Recipe,
@@ -226,7 +220,7 @@ class IngredientInRecipe(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """Модель для описания формирования покупок """
+    """Модель для описания формирования покупок."""
 
     user = models.ForeignKey(
         User,
@@ -286,7 +280,7 @@ class Favorite(models.Model):
 
 
 class Follow(models.Model):
-    """ Модель для создания подписок на автора"""
+    """Модель для создания подписок на автора."""
 
     user = models.ForeignKey(
         User,

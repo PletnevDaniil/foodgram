@@ -176,3 +176,11 @@ https://your_domain/redoc/
 
 ### Автор
 [Плетнев Даниил Михайлович](https://github.com/PletnevDaniil)
+
+    ```
+    ip - 51.250.27.26
+    Домен - https://foodgrampletnev.zapto.org/
+    superuser:
+    email - pletnev@mail.ru
+    pass - megapass4556
+    ```

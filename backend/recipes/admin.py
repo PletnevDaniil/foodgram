@@ -1,8 +1,11 @@
 from django.contrib.admin import ModelAdmin, register
 from django.contrib.auth.admin import UserAdmin
 
-from .models import (Favorite, Follow, Ingredient, IngredientInRecipe, Recipe,
-                     ShoppingCart, Tag, User)
+from .models import (
+    Favorite, Follow, Ingredient,
+    IngredientInRecipe, Recipe,
+    ShoppingCart, Tag, User
+)
 
 
 @register(Ingredient)
@@ -19,17 +22,24 @@ class RecipeAdmin(ModelAdmin):
     list_filter = ('author', 'name', 'tags')
     search_fields = ('name',)
 
-    def get_favorites(self, obj):
-        return obj.favorites.count()
+    def get_queryset(self, request):
+        """Оптимизация запроса: prefetch tags и in_favorites."""
+        return super().get_queryset(request).prefetch_related(
+            'tags',
+            'in_favorites'
+        )
 
-    get_favorites.short_description = (
+    def get_favorites(self, obj):
+        return obj.in_favorites.count()
+
+    get_favorites.short_description = [
         'Количество добавлений рецепта в избранное'
-    )
+    ]
 
     def get_tags(self, obj):
-        return '\n'.join(obj.tags.values_list('name', flat=True))
+        return ', '.join(obj.tags.values_list('name', flat=True))
 
-    get_tags.short_description = 'Тег или список тегов'
+    get_tags.short_description = 'Теги'
 
 
 @register(User)

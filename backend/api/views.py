@@ -3,17 +3,20 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Follow, Ingredient, IngredientInRecipe,
-                            Recipe, ShoppingCart, Tag, User)
 from rest_framework import response, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+)
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from recipes.models import (
+    Favorite, Follow, Ingredient, IngredientInRecipe,
+    Recipe, ShoppingCart, Tag, User
+)
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAuthorOrReadOnly
@@ -22,6 +25,7 @@ from .serializers import (AddFavoritesSerializer, CreateRecipeSerializer,
                           FollowCreateSerializer,
                           IngredientSerializer,
                           RecipeSerializer, TagSerializer,
+                          ToggleRelationSerializer,
                           UserAvatarSerializer, UserSerializer)
 from .utils import generate_shopping_list_pdf
 
@@ -73,7 +77,7 @@ class UserViewSet(UserViewSet):
     )
     def subscriptions(self, request):
         queryset = User.objects.filter(
-            follow__user=request.user
+            followers__user=request.user
         ).annotate(
             recipes_count=Count('recipes')
         ).prefetch_related(
@@ -195,28 +199,35 @@ class RecipeViewSet(ModelViewSet):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
 
-        if request.method == 'POST':
-            obj, created = model_class.objects.get_or_create(
-                user=user, recipe=recipe
-            )
-            if not created:
-                return Response(
-                    {'errors': f'Рецепт "{recipe.name}"уже в {related_name}.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer = AddFavoritesSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        context = {
+            'request': request,
+            'model_class': model_class,
+            'related_name': related_name
+        }
 
-        if request.method == 'DELETE':
-            deleted, _ = model_class.objects.filter(
+        if request.method == 'POST':
+            serializer = ToggleRelationSerializer(
+                data={'recipe_id': pk},
+                context=context
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            response_serializer = AddFavoritesSerializer(recipe)
+            return Response(
+                response_serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        elif request.method == 'DELETE':
+            deleted_count, _ = model_class.objects.filter(
                 user=user, recipe=recipe
             ).delete()
-            if deleted:
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {'errors': f'Рецепт "{recipe.name}" не в {related_name}.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            if deleted_count == 0:
+                return Response(
+                    {'errors': f'Рецепт "{recipe.name}" не в {related_name}.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -250,7 +261,7 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request):
         """Метод для загрузки списка покупок в pdf формате."""
         ingredients = IngredientInRecipe.objects.filter(
-            recipe__shopping_recipe__user=request.user
+            recipe__in_shopping_carts__user=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'

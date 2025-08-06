@@ -49,7 +49,7 @@ class RecipeFilter(filters.FilterSet):
         """Фильтрация рецептов в избранном."""
         if value and self.request.user.is_authenticated:
             return queryset.filter(
-                favorites__user=self.request.user
+                in_favorites__user=self.request.user
             ).distinct()
         return queryset.distinct()
 
@@ -57,6 +57,6 @@ class RecipeFilter(filters.FilterSet):
         """Фильтрация рецептов в списке покупок."""
         if value and self.request.user.is_authenticated:
             return queryset.filter(
-                shopping_recipe__user=self.request.user
+                in_shopping_carts__user=self.request.user
             ).distinct()
         return queryset.distinct()

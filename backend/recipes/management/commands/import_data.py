@@ -3,7 +3,7 @@ import csv
 from django.core.management.base import BaseCommand
 from recipes.models import Ingredient, Tag
 
-from foodgram.settings import DATA_DIRECTORY
+from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -39,7 +39,7 @@ class Command(BaseCommand):
         """Импорт ингредиентов из CSV"""
         try:
             with open(
-                f'{DATA_DIRECTORY}/ingredients.csv',
+                f'{settings.DATA_DIRECTORY}/ingredients.csv',
                 encoding='utf-8'
             ) as file:
                 reader = csv.reader(file)
@@ -69,7 +69,10 @@ class Command(BaseCommand):
     def _import_tags(self):
         """Импорт тегов из CSV"""
         try:
-            with open(f'{DATA_DIRECTORY}/tags.csv', encoding='utf-8') as file:
+            with open(
+                f'{settings.DATA_DIRECTORY}/tags.csv',
+                encoding='utf-8'
+            ) as file:
                 reader = csv.reader(file)
                 created_count = 0
                 for row in reader:

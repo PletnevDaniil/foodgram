@@ -109,7 +109,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserSerializer(read_only=True)
     ingredients = IngredientInRecipeSerializer(
-        source='ingredient_list',
+        source='recipe_ingredients',
         many=True
     )
     is_favorited = serializers.SerializerMethodField()
@@ -332,6 +332,33 @@ class FollowRepresentationSerializer(UserSerializer):
             many=True,
             context={'request': request}
         ).data
+
+
+class ToggleRelationSerializer(serializers.Serializer):
+    """Сериализатор для добавления рецепта в избранное или список покупок."""
+
+    recipe_id = serializers.PrimaryKeyRelatedField(
+        queryset=Recipe.objects.all()
+    )
+
+    def validate(self, data):
+        user = self.context['request'].user
+        recipe = data['recipe_id']
+        model_class = self.context['model_class']
+        related_name = self.context['related_name']
+
+        if model_class.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError({
+                'errors': f'Рецепт "{recipe.name}" уже в {related_name}.'
+            })
+
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        model_class = self.context['model_class']
+        recipe = validated_data['recipe_id']
+        return model_class.objects.create(user=user, recipe=recipe)
 
 
 class AddFavoritesSerializer(RecipeShortSerializer):

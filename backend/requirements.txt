@@ -8,6 +8,7 @@ gunicorn==20.0.4
 python-dotenv==0.20.0
 
 # Дополнительные зависимости (DRF-расширения и утилиты)
+django-admin-autocomplete-filter==1.0.1
 django-filter==2.4.0
 djangorestframework-simplejwt==4.8.0
 drf-yasg==1.21.4

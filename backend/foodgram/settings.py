@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'djoser',
     'drf_yasg',
     'django_filters',
+    'admin_auto_filters',
 
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
